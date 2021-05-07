@@ -1,6 +1,9 @@
 # X9Containers
 Docker containers to finger pointing pesky breaches from your running images
 
+![Docker containers to finger pointing pesky breaches from your running images](./point.png)
+
+
 ### Usage
 
 Intended to just print each vulnerability scanner output to the standard output:
@@ -15,3 +18,4 @@ for i in scans/* ; do \
   echo "********** END OF $$i ********** ; \
 done
 ```
+Where `IMAGE=${TARGET_IMAGE}:${VERSION}` is the target image for scanning.
