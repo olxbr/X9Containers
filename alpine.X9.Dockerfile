@@ -1,17 +1,17 @@
 ARG IMAGE
 
+FROM $IMAGE as trivy-stage
+WORKDIR /scans
+
+COPY --from=aquasec/trivy:latest /usr/local/bin/trivy /usr/local/bin/trivy
+RUN trivy filesystem --exit-code 0 --no-progress / | tee image-vulnerabilities-trivy.txt
+
 FROM $IMAGE as clamscan-stage
 WORKDIR /scans
 
 RUN apk update && apk upgrade && apk add --no-cache clamav-libunrar clamav
 RUN freshclam
 RUN clamscan -r -i --exclude-dir="^/sys" / >> recursive-root-dir-clamscan.txt
-
-FROM $IMAGE as trivy-stage
-WORKDIR /scans
-
-COPY --from=aquasec/trivy:latest /usr/local/bin/trivy /usr/local/bin/trivy
-RUN trivy filesystem --exit-code 0 --no-progress / | tee image-vulnerabilities-trivy.txt
 
 # ... more stages ...
 
