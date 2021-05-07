@@ -12,6 +12,7 @@ curl https://raw.githubusercontent.com/olxbr/X9Containers/main/debian.X9.Dockerf
 docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${TARGET_IMAGE}:${VERSION} --quiet .
 docker create --name suspectcontainer suspectimage
 docker cp suspectcontainer:/scans ./scans
+
 for i in scans/* ; do \
   cat $$i ; \
   echo "********** END OF $$i ********** ; \
