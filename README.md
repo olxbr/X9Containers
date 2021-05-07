@@ -11,7 +11,7 @@ docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${TARGET_IMAGE}:
 docker create --name suspectcontainer suspectimage
 docker cp suspectcontainer:/scans ./scans
 for i in scans/* ; do \
-	cat $$i ; \
-	echo "********** END OF $$i ********** ; \
+  cat $$i ; \
+  echo "********** END OF $$i ********** ; \
 done
 ```
