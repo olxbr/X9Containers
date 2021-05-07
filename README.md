@@ -1,8 +1,7 @@
 # X9Containers
 Docker containers to finger pointing pesky breaches from your running images
 
-![Docker containers to finger pointing pesky breaches from your running images](./point.png)
-
+<img src="./point.png" width="380" height="313">
 
 ### Usage
 
