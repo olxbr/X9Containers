@@ -10,8 +10,7 @@ RUN clamscan -r -i --exclude-dir="^/sys" / >> recursive-root-dir-clamscan.txt
 FROM $IMAGE as trivy-stage
 WORKDIR /scans
 
-RUN apk update && apk upgrade && apk add --no-cache curl
-RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+COPY --from=aquasec/trivy:latest /usr/local/bin/trivy /usr/local/bin/trivy
 RUN trivy filesystem --exit-code 0 --no-progress / | tee image-vulnerabilities-trivy.txt
 
 # ... more stages ...
