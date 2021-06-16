@@ -1,0 +1,49 @@
+name: 'X9Containers'
+description: 'Scans live intermediate containers for vulnerabilities during customized X9 Dockerfiles image building'
+author: 'OLX BR'
+inputs:
+  image:
+    description: 'target image'
+    required: true
+  distro:
+    description: 'target distro'
+    required: true
+  criticality:
+    description: 'criticality for show'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - id: scan
+      run: |
+        curl https://raw.githubusercontent.com/olxbr/X9Containers/main/${DISTRO}.${CRITICALITY}.X9.Dockerfile --output X9.Dockerfile
+        
+        echo "X9 will find something to blame now..."
+        
+        docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} --quiet .
+        rm -rf X9.Dockerfile
+
+        docker create --name suspectcontainer suspectimage
+        docker cp suspectcontainer:/scans ./scans
+
+        echo "******************************************************************************************************************************************"
+        for i in scans/* ; do \
+            cat $$i ; \
+            echo "*********************************************** END OF $$i ***********************************************" ; \
+        done
+        
+        echo -n "Trivy	"
+        grep "Total: 0 (CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
+        
+        echo -n "ClamAV	"
+        grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
+
+        rm -rf scans
+      env:
+        IMAGE: ${{ inputs.image }}
+        DISTRO: ${{ inputs.distro }}
+        CRITICALITY: ${{ inputs.criticality }}
+      shell: bash
+branding:
+  icon: 'check-circle'
+  color: 'blue'
