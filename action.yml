@@ -6,7 +6,7 @@ inputs:
     description: 'target image'
     required: true
   distro:
-    description: 'target distro'
+    description: 'target image distro'
     required: true
   criticality:
     description: 'criticality for show'
