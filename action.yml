@@ -33,7 +33,7 @@ runs:
         done
         
         echo -n "Trivy	"
-        grep "Total: 0 (CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
+        grep "Total: 0 (${CRITICALITY}: 0)" scans/image-vulnerabilities-trivy.txt;
         
         echo -n "ClamAV	"
         grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
