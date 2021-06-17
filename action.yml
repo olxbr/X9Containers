@@ -17,7 +17,7 @@ runs:
 
         echo "X9 will find something to blame now..."
 
-        docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} .
+        docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} --quiet .
         rm -rf X9.Dockerfile
 
         docker create --name suspectcontainer suspectimage
