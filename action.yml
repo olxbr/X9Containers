@@ -33,6 +33,7 @@ runs:
         done
         
         echo -n "Trivy	"
+        export CRITICALITY=$(echo ${CRITICALITY} | tr [a-z] [A-Z])
         grep "Total: 0 (${CRITICALITY}: 0)" scans/image-vulnerabilities-trivy.txt;
         
         echo -n "ClamAV	"
