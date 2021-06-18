@@ -51,8 +51,10 @@ And then give a try with Actions:
 ```
 - name: Perform X9Containers Scan
   uses: olxbr/X9Containers@main
+  timeout-minutes: 6
   with:
     image: myleetimage:latest
     distro: distroless.clamav.trivy
     trivy_severity: CRITICAL
+    ignore_threats: false
 ```

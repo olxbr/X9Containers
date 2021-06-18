@@ -12,6 +12,10 @@ inputs:
     description: "Trivy threat detection level"
     required: false
     default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+  ignore_threats:
+    description: "if true, don't interrupt workflow if has findings"
+    required: false
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -30,40 +34,48 @@ runs:
             echo "*********************************************** END OF $i ***********************************************" ; \
         done
 
-        clam_scan_file="scans/recursive-root-dir-clamscan.txt"
-        if [[ -f "$clam_scan_file" ]]; then
-          echo -n "ClamAV	"
-          grep "Infected files: 0" $clam_scan_file;
-        fi
+        if [[ $IGNORE_THREATS == "false" ]]
+        then
 
-        trivy_scan_file="scans/image-vulnerabilities-trivy.txt"
-        if [[ -f "$trivy_scan_file" ]]; then
-          echo -n "Trivy	"
-          if [[ $TRIVY_SEVERITY == "CRITICAL" ]]
-          then
-            grep "Total: 0 (CRITICAL: 0)" $trivy_scan_file;
-          elif [[ $TRIVY_SEVERITY == "HIGH,CRITICAL" ]]
-          then
-            grep "Total: 0 (HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
-          elif [[ $TRIVY_SEVERITY == "MEDIUM,HIGH,CRITICAL" ]]
-          then
-            grep "Total: 0 (MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
-          elif [[ $TRIVY_SEVERITY == "LOW,MEDIUM,HIGH,CRITICAL" ]]
-          then
-            grep "Total: 0 (LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
-          elif [[ $TRIVY_SEVERITY == "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" ]]
-          then
-            grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
-          else
-            echo "Unknown Trivy severity"
+          clam_scan_file="scans/recursive-root-dir-clamscan.txt"
+          if [[ -f "$clam_scan_file" ]]; then
+            echo -n "ClamAV	"
+            grep "Infected files: 0" $clam_scan_file;
           fi
-        fi
 
+          trivy_scan_file="scans/image-vulnerabilities-trivy.txt"
+          if [[ -f "$trivy_scan_file" ]]; then
+            echo -n "Trivy	"
+            if [[ $TRIVY_SEVERITY == "CRITICAL" ]]
+            then
+              grep "Total: 0 (CRITICAL: 0)" $trivy_scan_file;
+            elif [[ $TRIVY_SEVERITY == "HIGH,CRITICAL" ]]
+            then
+              grep "Total: 0 (HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            elif [[ $TRIVY_SEVERITY == "MEDIUM,HIGH,CRITICAL" ]]
+            then
+              grep "Total: 0 (MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            elif [[ $TRIVY_SEVERITY == "LOW,MEDIUM,HIGH,CRITICAL" ]]
+            then
+              grep "Total: 0 (LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            elif [[ $TRIVY_SEVERITY == "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" ]]
+            then
+              grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            else
+              echo "Custom Trivy severity, ignoring interruption"
+            fi
+          fi
+        
+        else
+          echo "IGNORE_THREATS is not false, ignoring interruption"
+        fi
+        
         rm -rf scans
       env:
         IMAGE: ${{ inputs.image }}
         DISTRO: ${{ inputs.distro }}
         TRIVY_SEVERITY: ${{ inputs.trivy_severity }}
+        IGNORE_THREATS: ${{ inputs.ignore_threats }}
       shell: bash
 branding:
   icon: "check-circle"
