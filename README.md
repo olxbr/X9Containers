@@ -1,9 +1,9 @@
 # X9Containers
 Docker containers to finger pointing pesky breaches from your running images.
 
-It's nothing really new: X9Containers use existing tools to find malwares and vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy) and [ClamAV](https://github.com/Cisco-Talos/clamav) in a [multi-stage building approach](https://docs.docker.com/develop/develop-images/multistage-build/), copying the whole filesystem to be analyzed at each stage.
+It's nothing really new: X9Containers use existing tools to find malwares and vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy) and [ClamAV](https://github.com/Cisco-Talos/clamav) in a [multi-stage building approach](https://docs.docker.com/develop/develop-images/multistage-build/), copying the whole filesystem to be analyzed at each stage - at `distroless.` suffix.
 
-The analysis occur during building, so it can run into the intermediate container, where we hope to find things dynamically.
+But the analysis can also occur during building, so it can run into the intermediate container, where we hope to find things dynamically - at non `distroless.` suffix.
 
 X9 it is a popular slang among Brazilians wich can be expressed as whistleblower.
 
