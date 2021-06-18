@@ -31,3 +31,28 @@ for i in scans/* ; do \
   echo "********** END OF $i ********** ; \
 done
 ```
+
+#### Usage with GitHub Action
+
+If you feel lazy and just want to blow up some pipeline across GitHub neighborhood, read below.
+
+First, build your Docker image as usual inside your pipeline:
+```
+- name: Check out repository
+  uses: actions/checkout@v2
+
+...
+
+- name: Build Docker Image
+  run: docker build -t myleetimage .
+```
+
+And then give a try with Actions:
+```
+- name: Perform X9Containers Scan
+  uses: olxbr/X9Containers@main
+  with:
+    image: myleetimage:latest
+    distro: distroless.clamav.trivy
+    trivy_severity: CRITICAL
+```
