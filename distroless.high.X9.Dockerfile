@@ -16,8 +16,6 @@ RUN apk update && apk upgrade && apk add --no-cache clamav-libunrar clamav
 RUN freshclam
 RUN clamscan -ri /base-root >> recursive-root-dir-clamscan.txt
 
-# ... more stages ...
-
 FROM alpine:3.13 as final-stage
 WORKDIR /scans
 COPY --from=clamscan-stage /scans/recursive-root-dir-clamscan.txt ./recursive-root-dir-clamscan.txt

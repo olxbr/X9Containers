@@ -13,8 +13,6 @@ RUN apk update && apk upgrade && apk add --no-cache clamav-libunrar clamav
 RUN freshclam
 RUN clamscan -r -i --exclude-dir="^/sys" / >> recursive-root-dir-clamscan.txt
 
-# ... more stages ...
-
 FROM alpine:3.13 as final-stage
 WORKDIR /scans
 

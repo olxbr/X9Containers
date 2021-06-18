@@ -5,7 +5,7 @@ It's nothing really new: X9Containers use existing tools to find malwares and vu
 
 But the analysis can also occur during building, so it can run into the intermediate container, where we hope to find things dynamically - at non `distroless.` suffix.
 
-X9 it is a popular slang among Brazilians wich can be expressed as whistleblower.
+"X9" it is a popular slang among Brazilians which means "whistleblower".
 
 Said that...
 
