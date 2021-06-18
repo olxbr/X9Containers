@@ -1,7 +1,7 @@
 ARG IMAGE
-ARG TRIVY_SEVERITY
 
 FROM $IMAGE as trivy-stage
+ARG TRIVY_SEVERITY
 WORKDIR /scans
 
 COPY --from=aquasec/trivy:latest /usr/local/bin/trivy /usr/local/bin/trivy
