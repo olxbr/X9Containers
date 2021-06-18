@@ -65,6 +65,16 @@ runs:
           echo -n "ClamAV	"
           grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
         fi
+
+        if [[ $X9CONTAINER == *".clamav"* ]]; then
+          echo -n "ClamAV	"
+          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
+        fi
+
+        if [[ $X9CONTAINER == *".trivy"* ]]; then
+          echo -n "Trivy	"
+          grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
+        fi
         
         rm -rf scans
       env:
