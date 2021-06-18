@@ -32,7 +32,7 @@ for i in scans/* ; do \
 done
 ```
 
-#### Usage with GitHub Action
+#### Usage with GitHub Actions
 
 If you feel lazy and just want to blow up some pipeline across GitHub neighborhood, read below.
 
