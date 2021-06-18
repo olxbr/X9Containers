@@ -17,16 +17,17 @@ Intended to just print each vulnerability scanner output to the standard output:
 
 ```sh
 # You need to choose the appropriate Dockerfile which will run on top of the target image container
-curl https://raw.githubusercontent.com/olxbr/X9Containers/main/debian.X9.Dockerfile --output X9.Dockerfile
+curl https://raw.githubusercontent.com/olxbr/X9Containers/main/debian.clamav.trivy.X9.Dockerfile --output X9.Dockerfile
 
 # Where IMAGE=${TARGET_IMAGE}:${VERSION} is the target image for scanning
-docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${TARGET_IMAGE}:${VERSION} --quiet .
+# and TRIVY_SEVERITY=${TRIVY_SEVERITY} is a Trivy comma separated threat levels to consider
+docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${TARGET_IMAGE}:${VERSION} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
 docker create --name suspectcontainer suspectimage
 docker cp suspectcontainer:/scans ./scans
 
-# Do whatever you need with the artifacts, in this case it will only be printed
+# Do whatever you need with the artifacts, in this case it will only be printed in console:
 for i in scans/* ; do \
-  cat $$i ; \
-  echo "********** END OF $$i ********** ; \
+  cat $i ; \
+  echo "********** END OF $i ********** ; \
 done
 ```

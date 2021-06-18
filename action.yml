@@ -5,18 +5,22 @@ inputs:
   image:
     description: "target Docker Image"
     required: true
-  x9container:
-    description: "target X9Containers Dockerfile"
+  distro:
+    description: "target distro of Docker Image"
     required: true
+  trivy_severity:
+    description: "Trivy threat detection level"
+    required: false
+    default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
 runs:
   using: "composite"
   steps:
     - id: scan
       run: |
-        curl https://raw.githubusercontent.com/olxbr/X9Containers/main/${X9CONTAINER}.X9.Dockerfile --output X9.Dockerfile
+        curl https://raw.githubusercontent.com/olxbr/X9Containers/main/${DISTRO}.X9.Dockerfile --output X9.Dockerfile
         echo "X9 will find something to blame now..."
-        
-        docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} --quiet .
+
+        docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
         rm -rf X9.Dockerfile
         docker create --name suspectcontainer suspectimage
         docker cp suspectcontainer:/scans ./scans
@@ -25,61 +29,41 @@ runs:
             cat $i ; \
             echo "*********************************************** END OF $i ***********************************************" ; \
         done
-        
-        if [[ $X9CONTAINER == *".critical"* ]]; then
-          echo -n "Trivy	"
-          grep "Total: 0 (CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
 
+        clam_scan_file="scans/recursive-root-dir-clamscan.txt"
+        if [[ -f "$clam_scan_file" ]]; then
           echo -n "ClamAV	"
-          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
+          grep "Infected files: 0" $clam_scan_file;
         fi
-        
-        if [[ $X9CONTAINER == *".high"* ]]; then
+
+        trivy_scan_file="scans/image-vulnerabilities-trivy.txt"
+        if [[ -f "$trivy_scan_file" ]]; then
           echo -n "Trivy	"
-          grep "Total: 0 (HIGH: 0, CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
-
-          echo -n "ClamAV	"
-          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
-        fi
-        
-        if [[ $X9CONTAINER == *".medium"* ]]; then
-          echo -n "Trivy	"
-          grep "Total: 0 (MEDIUM: 0, HIGH: 0, CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
-
-          echo -n "ClamAV	"
-          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
-        fi
-        
-        if [[ $X9CONTAINER == *".low"* ]]; then
-          echo -n "Trivy	"
-          grep "Total: 0 (LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
-
-          echo -n "ClamAV	"
-          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
-        fi
-        
-        if [[ $X9CONTAINER == *".unknown"* ]]; then
-          echo -n "Trivy	"
-          grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
-
-          echo -n "ClamAV	"
-          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
+          if [[ $TRIVY_SEVERITY == "CRITICAL" ]]
+          then
+            grep "Total: 0 (CRITICAL: 0)" $trivy_scan_file;
+          elif [[ $TRIVY_SEVERITY == "HIGH,CRITICAL" ]]
+          then
+            grep "Total: 0 (HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+          elif [[ $TRIVY_SEVERITY == "MEDIUM,HIGH,CRITICAL" ]]
+          then
+            grep "Total: 0 (MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+          elif [[ $TRIVY_SEVERITY == "LOW,MEDIUM,HIGH,CRITICAL" ]]
+          then
+            grep "Total: 0 (LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+          elif [[ $TRIVY_SEVERITY == "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" ]]
+          then
+            grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+          else
+            echo "Unknown Trivy severity"
+          fi
         fi
 
-        if [[ $X9CONTAINER == *".clamav"* ]]; then
-          echo -n "ClamAV	"
-          grep "Infected files: 0" scans/recursive-root-dir-clamscan.txt;
-        fi
-
-        if [[ $X9CONTAINER == *".trivy"* ]]; then
-          echo -n "Trivy	"
-          grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" scans/image-vulnerabilities-trivy.txt;
-        fi
-        
         rm -rf scans
       env:
         IMAGE: ${{ inputs.image }}
-        X9CONTAINER: ${{ inputs.x9container }}
+        DISTRO: ${{ inputs.distro }}
+        TRIVY_SEVERITY: ${{ inputs.trivy_severity }}
       shell: bash
 branding:
   icon: "check-circle"

@@ -1,4 +1,5 @@
 ARG IMAGE
+ARG TRIVY_SEVERITY
 
 FROM $IMAGE as base
 
@@ -8,7 +9,7 @@ COPY --from=base / ../base-root
 FROM base-stage as trivy-stage
 WORKDIR /scans
 COPY --from=aquasec/trivy:latest /usr/local/bin/trivy /usr/local/bin/trivy
-RUN trivy filesystem --ignore-unfixed --severity CRITICAL --exit-code 0 --no-progress /base-root | tee image-vulnerabilities-trivy.txt
+RUN trivy filesystem --ignore-unfixed --severity $TRIVY_SEVERITY --exit-code 0 --no-progress /base-root | tee image-vulnerabilities-trivy.txt
 
 FROM base-stage as clamscan-stage
 WORKDIR /scans
