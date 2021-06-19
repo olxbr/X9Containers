@@ -23,7 +23,7 @@ runs:
       run: |
         curl https://raw.githubusercontent.com/olxbr/X9Containers/main/${DISTRO}.X9.Dockerfile --output X9.Dockerfile
         echo "X9 will find something to blame now..."
-
+        echo "CRITICALITY ${TRIVY_SEVERITY}"
         docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
         rm -rf X9.Dockerfile
         docker create --name suspectcontainer suspectimage
