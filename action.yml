@@ -48,22 +48,42 @@ runs:
 
         trivy_scan_file="scans/image-vulnerabilities-trivy.txt"
         if [[ -f "$trivy_scan_file" ]]; then
+          CRITICAL_THRESHOLD=10
+          HIGH_THRESHOLD=250
+          MEDIUM_THRESHOLD=500
+          LOW_THRESHOLD=1000
+          UNKNOWN_THRESHOLD=200
+
+          summary=$(grep '^Total: ' trivy_scan_file)
+          totals=$(echo $summary | grep -P -o '[0-9]+')
           echo -n "Trivy	"
+          echo $summary
+
           if [[ $TRIVY_SEVERITY == "CRITICAL" ]]
           then
-            grep "Total: 0 (CRITICAL: 0)" $trivy_scan_file;
+            if [[ ${totals[1]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
           elif [[ $TRIVY_SEVERITY == "HIGH,CRITICAL" ]]
           then
-            grep "Total: 0 (HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            if [[ ${totals[1]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[2]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
           elif [[ $TRIVY_SEVERITY == "MEDIUM,HIGH,CRITICAL" ]]
           then
-            grep "Total: 0 (MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            if [[ ${totals[1]} -gt $MEDIUM_THRESHOLD ]] || [[ ${totals[2]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[3]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
           elif [[ $TRIVY_SEVERITY == "LOW,MEDIUM,HIGH,CRITICAL" ]]
           then
-            grep "Total: 0 (LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            if [[ ${totals[1]} -gt $LOW_THRESHOLD ]] || [[ ${totals[2]} -gt $MEDIUM_THRESHOLD ]] || [[ ${totals[3]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[4]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
           elif [[ $TRIVY_SEVERITY == "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" ]]
           then
-            grep "Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)" $trivy_scan_file;
+            if [[ ${totals[1]} -gt $UNKNOWN_THRESHOLD ]] || [[ ${totals[2]} -gt $LOW_THRESHOLD ]] || [[ ${totals[3]} -gt $MEDIUM_THRESHOLD ]] || [[ ${totals[4]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[5]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
           else
             echo "Custom Trivy severity, ignoring interruption"
           fi
