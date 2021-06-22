@@ -54,7 +54,7 @@ runs:
           LOW_THRESHOLD=1000
           UNKNOWN_THRESHOLD=200
 
-          summary=$(grep '^Total: ' trivy_scan_file)
+          summary=$(grep '^Total: ' $trivy_scan_file)
           totals=$(echo $summary | grep -P -o '[0-9]+')
           echo -n "Trivy	"
           echo $summary
