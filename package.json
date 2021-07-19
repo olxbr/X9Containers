@@ -1,0 +1,32 @@
+{
+  "name": "X9Containers",
+  "version": "1.0.0",
+  "description": "Docker containers to finger pointing pesky breaches from your running images.",
+  "main": "lib/main.js",
+  "repository": "git@github.com:olxbr/X9Containers.git",
+  "author": "squad-dev-sec-ops@olxbr.com",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc && ncc build",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "test": "jest --coverage",
+    "pre-checkin": "yarn run format && yarn run build"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "@vercel/ncc": "^0.29.0",
+    "dotenv": "^10.0.0",
+    "jest": "^27.0.6",
+    "jest-circus": "^27.0.6",
+    "jest-runtime": "^27.0.6",
+    "prettier": "^2.3.2",
+    "ts-jest": "^27.0.3",
+    "typescript": "^4.3.5",
+    "typescript-formatter": "^7.2.2"
+  },
+  "dependencies": {
+    "@actions/core": "^1.4.0",
+    "@actions/exec": "^1.1.0"
+  }
+}
