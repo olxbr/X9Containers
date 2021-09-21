@@ -3,9 +3,9 @@ description: "Scans live intermediate containers for vulnerabilities during cust
 author: "OLX BR"
 inputs:
   base_image:
-      description: "The base image for X9"
+      description: "The base image for X9Containers scan stages"
     required: true
-    default: ""
+    default: "alpine:3.13"
   image:
     description: "target Docker Image"
     required: true
