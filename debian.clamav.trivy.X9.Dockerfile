@@ -1,4 +1,5 @@
 ARG IMAGE
+ARG BASE_IMAGE
 
 FROM $IMAGE as trivy-stage
 ARG TRIVY_SEVERITY
@@ -14,8 +15,7 @@ RUN apt update && apt-get install clamav -y
 RUN freshclam
 RUN clamscan -r -i --exclude-dir="^/sys" / >> recursive-root-dir-clamscan.txt
 
-FROM 073521391622.dkr.ecr.us-east-1.amazonaws.com/base_images/alpine:3.14-base as final-stage
+FROM $BASE_IMAGE as final-stage
 WORKDIR /scans
-
 COPY --from=clamscan-stage /scans/recursive-root-dir-clamscan.txt ./recursive-root-dir-clamscan.txt
 COPY --from=trivy-stage /scans/image-vulnerabilities-trivy.txt ./image-vulnerabilities-trivy.txt

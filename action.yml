@@ -2,6 +2,10 @@ name: "X9Containers"
 description: "Scans live intermediate containers for vulnerabilities during customized X9 Dockerfiles image building"
 author: "OLX BR"
 inputs:
+  base_image:
+      description: "The base image for X9Containers scan stages"
+    required: true
+    default: "alpine:3.13"
   image:
     description: "target Docker Image"
     required: true
@@ -24,7 +28,7 @@ runs:
         curl https://raw.githubusercontent.com/olxbr/X9Containers/main/${DISTRO}.X9.Dockerfile --output X9.Dockerfile
         echo "X9 will find something to blame now..."
 
-        docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${IMAGE} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
+        docker build -f X9.Dockerfile -t suspectimage --build-arg BASE_IMAGE=${BASE_IMAGE} --build-arg IMAGE=${IMAGE} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
         rm -rf X9.Dockerfile
         docker create --name suspectcontainer suspectimage
         docker cp suspectcontainer:/scans ./scans
