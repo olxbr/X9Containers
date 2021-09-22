@@ -1,4 +1,5 @@
 ARG IMAGE
+ARG BASE_IMAGE
 
 FROM $IMAGE as base
 
