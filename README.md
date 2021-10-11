@@ -34,13 +34,63 @@ docker build -f X9.Dockerfile -t suspectimage \
   --build-arg TARGET_IMAGE=${TARGET_IMAGE}:${TARGET_IMAGE_VERSION} \        # my/super/suspect/docker/local/builded/image:latest
   --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} \                            # CRITICAL
   --build-arg WKDIR=${TRIVY_SEVERITY} \                                     # app
-  --quiet .
+  --quiet \
+  .
 docker create --name suspectcontainer suspectimage
 docker cp suspectcontainer:/scans ./scans
 
 # Do whatever you need with the reports inside scans directory and do your own post execution cleanup:
 for i in scans/* ; do \
   cat $i ; \
-  echo "********** END OF $i ********** ; \
+  printf "\n\n********** END OF $i **********\n\n" ; \
 done
+```
+
+Sample output
+
+```
+repo,line,commit,offender,leakURL,rule,tags,commitMsg,author,email,file,date
+,REDACTED,,REDACTED,,AWS Access Key,"key, AWS",,,,aaaa.txt,0001-01-01T00:00:00Z
+
+
+********** END OF scans/gitleaks-leaks-result.txt **********
+
+2021-10-11T01:12:21.287Z	INFO	Need to update DB
+2021-10-11T01:12:21.287Z	INFO	Downloading DB...
+2021-10-11T01:12:24.437Z	INFO	Detecting Debian vulnerabilities...
+
+debuerreotype (debian 11.0)
+===========================
+Total: 2 (CRITICAL: 2)
+
++-----------+------------------+----------+-------------------+------------------+--------------------------------------+
+|  LIBRARY  | VULNERABILITY ID | SEVERITY | INSTALLED VERSION |  FIXED VERSION   |                TITLE                 |
++-----------+------------------+----------+-------------------+------------------+--------------------------------------+
+| libssl1.1 | CVE-2021-3711    | CRITICAL | 1.1.1k-1          | 1.1.1k-1+deb11u1 | openssl: SM2 Decryption              |
+|           |                  |          |                   |                  | Buffer Overflow                      |
+|           |                  |          |                   |                  | -->avd.aquasec.com/nvd/cve-2021-3711 |
++-----------+                  +          +                   +                  +                                      +
+| openssl   |                  |          |                   |                  |                                      |
+|           |                  |          |                   |                  |                                      |
+|           |                  |          |                   |                  |                                      |
++-----------+------------------+----------+-------------------+------------------+--------------------------------------+
+
+
+********** END OF scans/image-vulnerabilities-trivy.txt **********
+
+
+----------- SCAN SUMMARY -----------
+Known viruses: 8570581
+Engine version: 0.103.3
+Scanned directories: 1566
+Scanned files: 7410
+Infected files: 0
+Data scanned: 339.71 MB
+Data read: 205.54 MB (ratio 1.65:1)
+Time: 126.512 sec (2 m 6 s)
+Start Date: 2021:10:11 01:13:46
+End Date:   2021:10:11 01:15:52
+
+
+********** END OF scans/recursive-root-dir-clamscan.txt **********
 ```
