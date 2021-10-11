@@ -1,7 +1,7 @@
 # X9Containers
-Docker containers to finger pointing pesky breaches from your running images.
+Collection of Docker containers to finger pointing pesky breaches from your running images.
 
-It's nothing really new: X9Containers use existing tools to find malwares and vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy) and [ClamAV](https://github.com/Cisco-Talos/clamav) in a [multi-stage building approach](https://docs.docker.com/develop/develop-images/multistage-build/), copying the whole filesystem to be analyzed at each stage - at `distroless.` suffix.
+It's nothing really new: X9Containers use existing tools to find malwares, vulnerabilities and secrets using [Trivy](https://github.com/aquasecurity/trivy), [ClamAV](https://github.com/Cisco-Talos/clamav) and [GitLeaks](https://github.com/zricethezav/gitleaks) in a [multi-stage building approach](https://docs.docker.com/develop/develop-images/multistage-build/), copying the whole filesystem to be analyzed at each stage - at `distroless.` suffix.
 
 But the analysis can also occur during building, so it can run into the intermediate container, where we hope to find things dynamically - at non `distroless.` suffix.
 
@@ -13,48 +13,34 @@ Said that...
 
 ### Usage
 
-Intended to just print each vulnerability scanner output to the standard output:
+This snippet is intended to just print each report to the standard output, so grab a drink and figure out a best use case based on your needs:
 
 ```sh
 # You need to choose the appropriate Dockerfile which will run on top of the target image container
-curl https://raw.githubusercontent.com/olxbr/X9Containers/main/debian.clamav.trivy.X9.Dockerfile --output X9.Dockerfile
+curl https://raw.githubusercontent.com/olxbr/X9Containers/main/distroless.clamav.trivy.gitleaks.X9.Dockerfile --output X9.Dockerfile
 
-# Where IMAGE=${TARGET_IMAGE}:${VERSION} is the target image for scanning
-# and TRIVY_SEVERITY=${TRIVY_SEVERITY} is a Trivy comma separated threat levels to consider
-docker build -f X9.Dockerfile -t suspectimage --build-arg IMAGE=${TARGET_IMAGE}:${VERSION} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
+# ARGS are for:
+# - REGISTRY is the exactly registry that contains all images used in this analysis
+# - *_IMAGE are Docker images in said registry
+# - TARGET_IMAGE it is a local build image chosen for analysis
+# - TRIVY_SEVERITY is a Trivy comma separated threat level. See https://aquasecurity.github.io/trivy/v0.20.0/vulnerability/examples/filter/
+# - WKDIR is the workdir used to held all your application stuff
+docker build -f X9.Dockerfile -t suspectimage \
+  --build-arg REGISTRY=${REGISTRY} \                                        # docker.io
+  --build-arg CLAMAV_IMAGE=${CLAMAV_IMAGE}:${CLAMAV_IMAGE_VERSION} \        # clamav/clamav:latest
+  --build-arg TRIVY_IMAGE=${TRIVY_IMAGE}:${TRIVY_IMAGE_VERSION} \           # aquasec/trivy:latest
+  --build-arg GITLEAKS_IMAGE=${GITLEAKS_IMAGE}:${GITLEAKS_IMAGE_VERSION} \  # zricethezav/gitleaks:latest
+  --build-arg BASE_IMAGE=${ALPINE_IMAGE}:${ALPINE_IMAGE_VERSION} \          # alpine:latest
+  --build-arg TARGET_IMAGE=${TARGET_IMAGE}:${TARGET_IMAGE_VERSION} \        # my/super/suspect/docker/local/builded/image:latest
+  --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} \                            # CRITICAL
+  --build-arg WKDIR=${TRIVY_SEVERITY} \                                     # app
+  --quiet .
 docker create --name suspectcontainer suspectimage
 docker cp suspectcontainer:/scans ./scans
 
-# Do whatever you need with the artifacts, in this case it will only be printed in console:
+# Do whatever you need with the reports inside scans directory and do your own post execution cleanup:
 for i in scans/* ; do \
   cat $i ; \
   echo "********** END OF $i ********** ; \
 done
-```
-
-#### Usage with GitHub Actions
-
-If you feel lazy and just want to blow up some pipeline across GitHub neighborhood, read below.
-
-First, build your Docker image as usual inside your pipeline:
-```
-- name: Check out repository
-  uses: actions/checkout@v2
-
-...
-
-- name: Build Docker Image
-  run: docker build -t myleetimage .
-```
-
-And then give a try with Actions:
-```
-- name: Perform X9Containers Scan
-  uses: olxbr/X9Containers@main
-  timeout-minutes: 6
-  with:
-    image: myleetimage:latest
-    distro: distroless.clamav.trivy
-    trivy_severity: CRITICAL
-    ignore_threats: false
 ```
