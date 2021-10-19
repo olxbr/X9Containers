@@ -1,0 +1,105 @@
+name: "X9Containers"
+description: "Scans live intermediate containers for vulnerabilities during customized X9 Dockerfiles image building"
+author: "OLX BR"
+inputs:
+  base_image:
+      description: "The base image for X9Containers scan stages"
+    required: true
+    default: "alpine:3.13"
+  image:
+    description: "target Docker Image"
+    required: true
+  distro:
+    description: "target distro of Docker Image"
+    required: true
+  trivy_severity:
+    description: "Trivy threat detection level"
+    required: false
+    default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+  ignore_threats:
+    description: "if true, don't interrupt workflow if has findings"
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - id: scan
+      run: |
+        curl https://raw.githubusercontent.com/olxbr/X9Containers/main/${DISTRO}.X9.Dockerfile --output X9.Dockerfile
+        echo "X9 will find something to blame now..."
+
+        docker build -f X9.Dockerfile -t suspectimage --build-arg BASE_IMAGE=${BASE_IMAGE} --build-arg IMAGE=${IMAGE} --build-arg TRIVY_SEVERITY=${TRIVY_SEVERITY} --quiet .
+        rm -rf X9.Dockerfile
+        docker create --name suspectcontainer suspectimage
+        docker cp suspectcontainer:/scans ./scans
+        echo "******************************************************************************************************************************************"
+        for i in scans/* ; do \
+            cat $i ; \
+            echo "*********************************************** END OF $i ***********************************************" ; \
+        done
+
+        if [[ $IGNORE_THREATS == "true" ]]; then
+          echo "IGNORE_THREATS is true, skipping workflow interruption"
+          rm -rf scans
+          exit 0
+        fi
+
+        clam_scan_file="scans/recursive-root-dir-clamscan.txt"
+        if [[ -f "$clam_scan_file" ]]; then
+          echo -n "ClamAV	"
+          grep "Infected files: 0" $clam_scan_file;
+        fi
+
+        trivy_scan_file="scans/image-vulnerabilities-trivy.txt"
+        if [[ -f "$trivy_scan_file" ]]; then
+          CRITICAL_THRESHOLD=10
+          HIGH_THRESHOLD=250
+          MEDIUM_THRESHOLD=500
+          LOW_THRESHOLD=1000
+          UNKNOWN_THRESHOLD=200
+
+          summary=$(grep '^Total: ' $trivy_scan_file)
+          totals=$(echo $summary | grep -P -o '[0-9]+')
+          echo -n "Trivy	"
+          echo $summary
+
+          if [[ $TRIVY_SEVERITY == "CRITICAL" ]]
+          then
+            if [[ ${totals[1]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
+          elif [[ $TRIVY_SEVERITY == "HIGH,CRITICAL" ]]
+          then
+            if [[ ${totals[1]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[2]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
+          elif [[ $TRIVY_SEVERITY == "MEDIUM,HIGH,CRITICAL" ]]
+          then
+            if [[ ${totals[1]} -gt $MEDIUM_THRESHOLD ]] || [[ ${totals[2]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[3]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
+          elif [[ $TRIVY_SEVERITY == "LOW,MEDIUM,HIGH,CRITICAL" ]]
+          then
+            if [[ ${totals[1]} -gt $LOW_THRESHOLD ]] || [[ ${totals[2]} -gt $MEDIUM_THRESHOLD ]] || [[ ${totals[3]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[4]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
+          elif [[ $TRIVY_SEVERITY == "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" ]]
+          then
+            if [[ ${totals[1]} -gt $UNKNOWN_THRESHOLD ]] || [[ ${totals[2]} -gt $LOW_THRESHOLD ]] || [[ ${totals[3]} -gt $MEDIUM_THRESHOLD ]] || [[ ${totals[4]} -gt $HIGH_THRESHOLD ]] || [[ ${totals[5]} -gt $CRITICAL_THRESHOLD ]]; then
+              exit 1
+            fi
+          else
+            echo "Custom Trivy severity, ignoring interruption"
+          fi
+        fi
+
+        rm -rf scans
+      env:
+        IMAGE: ${{ inputs.image }}
+        DISTRO: ${{ inputs.distro }}
+        TRIVY_SEVERITY: ${{ inputs.trivy_severity }}
+        IGNORE_THREATS: ${{ inputs.ignore_threats }}
+      shell: bash
+branding:
+  icon: "check-circle"
+  color: "blue"
